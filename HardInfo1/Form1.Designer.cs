@@ -34,6 +34,8 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,9 +67,10 @@
             "Клавиатура",
             "Сеть",
             "Пользователи",
-            "Динамическая информация"});
+            "Динамическая информация",
+            "Процессы"});
             this.hardwarePart.Name = "hardwarePart";
-            this.hardwarePart.Size = new System.Drawing.Size(200, 30);
+            this.hardwarePart.Size = new System.Drawing.Size(200, 28);
             this.hardwarePart.SelectedIndexChanged += new System.EventHandler(this.hardwarePart_SelectedIndexChanged);
             // 
             // hardwarePartInfo
@@ -75,7 +78,9 @@
             this.hardwarePartInfo.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
             this.columnHeader2,
-            this.columnHeader3});
+            this.columnHeader3,
+            this.columnHeader4,
+            this.columnHeader5});
             this.hardwarePartInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.hardwarePartInfo.FullRowSelect = true;
             this.hardwarePartInfo.GridLines = true;
@@ -103,6 +108,14 @@
             this.columnHeader3.Text = "Информация";
             this.columnHeader3.Width = 200;
             // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Width = 200;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Width = 200;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 23F);
@@ -129,6 +142,8 @@
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
     }
 }
 

@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Management;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hardlnfo
 {
@@ -32,9 +33,7 @@ namespace Hardlnfo
 
         private void InitializeMemoryCounters()
         {
-            // Используемая память
             memUsageCounter = new PerformanceCounter("Memory", "Committed Bytes", null, true);
-            // Свободная память
             memFreeCounter = new PerformanceCounter("Memory", "Available MBytes", null, true);
         }
 
@@ -48,8 +47,6 @@ namespace Hardlnfo
             {
                 var name = drive["Name"].ToString();
                 diskFreeCounters[name] = new PerformanceCounter("LogicalDisk", "Free Megabytes", name, true);
-
-                // Получение и сохранение общего размера диска
                 ulong totalSize = (ulong)drive["Size"] / (1024 * 1024); // Преобразование в мегабайты
                 diskTotalSizes[name] = totalSize;
             }
@@ -93,17 +90,15 @@ namespace Hardlnfo
         {
             foreach (var disk in diskFreeCounters.Keys)
             {
-                float freeSpace = diskFreeCounters[disk].NextValue(); // Свободное пространство в мегабайтах
+                float freeSpace = diskFreeCounters[disk].NextValue();
                 float totalSize = diskTotalSizes[disk];
-                float usedSpace = totalSize - freeSpace; // Рассчитываем занятое пространство
+                float usedSpace = totalSize - freeSpace;
 
-                // Создаем элемент для отображения информации о диске
                 ListViewItem item = new ListViewItem($"Диск {disk}");
                 item.SubItems.Add($"Занято: {usedSpace:N0} MB");
                 item.SubItems.Add($"Свободно: {freeSpace:N0} MB");
                 item.SubItems.Add($"Всего: {totalSize:N0} MB");
 
-                // Обновляем или добавляем элемент в ListView
                 UpdateOrAddListViewItem(item, $"Disk {disk}");
             }
         }
@@ -119,56 +114,28 @@ namespace Hardlnfo
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            hardwarePart.SelectedIndex = 0; // Выбор первого элемента в списке
-            UpdateCPUUsage();
-            UpdateMemoryUsage();
-            UpdateDiskUsage();
+            hardwarePart.SelectedIndex = 0;
         }
-        private void GetHardWareInfo(string key, ListView list)
+
+        private void DisplayProcesses()
         {
-            list.Items.Clear();
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT * FROM " + key);
+            var processes = Process.GetProcesses();
+            var sortedProcesses = processes.OrderByDescending(p => p.WorkingSet64).ToList();
 
-            try
+            hardwarePartInfo.Items.Clear();
+            foreach (var process in sortedProcesses)
             {
-                foreach (ManagementObject obj in searcher.Get())
-                {
-                    ListViewGroup listViewGroup;
-
-                    try
-                    {
-                        listViewGroup = list.Groups.Add(obj["Name"].ToString(), obj["Name"].ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        listViewGroup = list.Groups.Add(obj.ToString(), obj.ToString());
-                    }
-
-                    foreach (PropertyData data in obj.Properties)
-                    {
-                        ListViewItem item = new ListViewItem(listViewGroup);
-                        item.UseItemStyleForSubItems = false;
-                        item.BackColor = list.Items.Count % 2 == 0 ? Color.WhiteSmoke : Color.White;
-                        item.Text = data.Name;
-
-                        if (data.Value != null && !string.IsNullOrEmpty(data.Value.ToString()))
-                        {
-                            string displayValue = ConvertDataToString(data);
-                            item.SubItems.Add(displayValue);
-                            list.Items.Add(item);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var item = new ListViewItem(process.ProcessName);
+                item.SubItems.Add($"{process.WorkingSet64 / 1024 / 1024} MB"); // ОЗУ в мегабайтах
+                item.SubItems.Add($"PID: {process.Id}");
+                hardwarePartInfo.Items.Add(item);
             }
         }
 
         private void hardwarePart_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string key = "";
+            timer.Stop();
+            string key;
             switch (hardwarePart.SelectedItem.ToString())
             {
                 case "Процессор":
@@ -213,13 +180,55 @@ namespace Hardlnfo
                 case "Динамическая информация":
                     timer.Start();
                     return;
+                case "Процессы":
+                    DisplayProcesses();
+                    return;
                 default:
-                    key = "";
-                    break;
+                    return;
             }
-            timer.Stop();
-            if (key != "")
-                GetHardWareInfo(key, hardwarePartInfo);
+            GetHardWareInfo(key, hardwarePartInfo);
+        }
+
+        private void GetHardWareInfo(string key, ListView list)
+        {
+            list.Items.Clear();
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT * FROM " + key);
+
+            try
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    ListViewGroup listViewGroup;
+
+                    try
+                    {
+                        listViewGroup = list.Groups.Add(obj["Name"].ToString(), obj["Name"].ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        listViewGroup = list.Groups.Add(obj.ToString(), obj.ToString());
+                    }
+
+                    foreach (PropertyData data in obj.Properties)
+                    {
+                        ListViewItem item = new ListViewItem(listViewGroup);
+                        item.UseItemStyleForSubItems = false;
+                        item.BackColor = list.Items.Count % 2 == 0 ? Color.WhiteSmoke : Color.White;
+                        item.Text = data.Name;
+
+                        if (data.Value != null && !string.IsNullOrEmpty(data.Value.ToString()))
+                        {
+                            string displayValue = ConvertDataToString(data);
+                            item.SubItems.Add(displayValue);
+                            list.Items.Add(item);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private string ConvertDataToString(PropertyData data)
