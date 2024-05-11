@@ -110,10 +110,12 @@
             // 
             // columnHeader4
             // 
+            this.columnHeader4.Text = "Всего";
             this.columnHeader4.Width = 200;
             // 
             // columnHeader5
             // 
+            this.columnHeader5.Text = "Сортировка ";
             this.columnHeader5.Width = 200;
             // 
             // Form1

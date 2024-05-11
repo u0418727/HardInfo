@@ -17,6 +17,12 @@ namespace Hardlnfo
         private Dictionary<string, float> diskTotalSizes; // Для хранения общего размера каждого диска
         private Timer timer;
 
+        // Переменные для сортировки
+        private int _sortColumn = -1;  // Переменная для отслеживания текущего столбца сортировки
+        private SortOrder _sortingOrder = SortOrder.Ascending;  // Переменная для отслеживания направления сортировки
+
+
+
         public Form1()
         {
             InitializeComponent();
@@ -115,6 +121,7 @@ namespace Hardlnfo
         private void Form1_Load(object sender, EventArgs e)
         {
             hardwarePart.SelectedIndex = 0;
+            this.hardwarePartInfo.ColumnClick += new ColumnClickEventHandler(this.hardwarePartInfo_ColumnClick);
         }
 
         private void DisplayProcesses()
@@ -129,6 +136,37 @@ namespace Hardlnfo
                 item.SubItems.Add($"{process.WorkingSet64 / 1024 / 1024} MB"); // ОЗУ в мегабайтах
                 item.SubItems.Add($"PID: {process.Id}");
                 hardwarePartInfo.Items.Add(item);
+            }
+        }
+        private void hardwarePartInfo_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == _sortColumn)
+            {
+                _sortingOrder = _sortingOrder == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
+            }
+            else
+            {
+                _sortColumn = e.Column;
+                _sortingOrder = SortOrder.Ascending;
+            }
+
+            this.hardwarePartInfo.ListViewItemSorter = new ListViewItemComparer(e.Column, _sortingOrder);
+        }
+
+        class ListViewItemComparer : System.Collections.IComparer
+        {
+            private int col;
+            private SortOrder order;
+
+            public ListViewItemComparer(int column, SortOrder order)
+            {
+                col = column;
+                this.order = order;
+            }
+
+            public int Compare(object x, object y)
+            {
+                return String.Compare(((ListViewItem)x).SubItems[col].Text, ((ListViewItem)y).SubItems[col].Text) * (order == SortOrder.Descending ? -1 : 1);
             }
         }
 
